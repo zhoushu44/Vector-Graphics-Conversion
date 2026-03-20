@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VTracer 批量转换工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #555;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: inline-block;
+            width: 200px;
+            font-weight: bold;
+            color: #666;
+        }
+        .form-group input,
+        .form-group select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+        .form-group input[type="number"] {
+            width: 80px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.secondary {
+            background-color: #008CBA;
+        }
+        button.secondary:hover {
+            background-color: #007bb5;
+        }
+        button.danger {
+            background-color: #f44336;
+        }
+        button.danger:hover {
+            background-color: #da190b;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        #fileList {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .file-item {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .file-item:last-child {
+            border-bottom: none;
+        }
+        #paramsText {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>VTracer 批量图像转矢量工具</h1>
+    <div class="container">
+        <!-- 文件夹选择 -->
+        <div class="section">
+            <h2>1. 选择图像文件夹</h2>
+            <div class="form-group">
+                <label for="inputFolder">输入文件夹：</label>
+                <input type="text" id="inputFolder" placeholder="选择包含图像的文件夹">
+                <button type="button" id="browseInput">浏览...</button>
+            </div>
+            <div class="form-group">
+                <label for="outputFolder">输出文件夹：</label>
+                <input type="text" id="outputFolder" placeholder="选择保存导出文件的文件夹">
+                <button type="button" id="browseOutput">浏览...</button>
+            </div>
+            <div id="fileList">
+                <!-- 检测到的图像文件列表将显示在这里 -->
+            </div>
+        </div>
+
+        <!-- 参数设置 -->
+        <div class="section">
+            <h2>2. 调整转换参数</h2>
+            <div class="form-group">
+                <label for="colormode">颜色模式：</label>
+                <select id="colormode">
+                    <option value="color">彩色 (color)</option>
+                    <option value="bw">黑白 (bw)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="mode">曲线拟合模式：</label>
+                <select id="mode">
+                    <option value="pixel">像素 (pixel)</option>
+                    <option value="polygon">多边形 (polygon)</option>
+                    <option value="spline" selected>样条曲线 (spline)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="hierarchical">分层聚类：</label>
+                <select id="hierarchical">
+                    <option value="stacked" selected>堆叠 (stacked)</option>
+                    <option value="cutout">剪切 (cutout)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="format">导出格式：</label>
+                <select id="format">
+                    <option value="svg" selected>SVG</option>
+                    <option value="png">PNG</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="segment_length">段长度：</label>
+                <input type="number" id="segment_length" min="3.5" max="10" step="0.5" value="3.5">
+            </div>
+            <div class="form-group">
+                <label for="splice_threshold">样条拼接阈值：</label>
+                <input type="number" id="splice_threshold" min="0" max="180" step="5" value="10">
+            </div>
+            <div class="form-group">
+                <label for="corner_threshold">角点阈值：</label>
+                <input type="number" id="corner_threshold" min="0" max="180" step="5" value="30">
+            </div>
+            <div class="form-group">
+                <label for="filter_speckle">噪点过滤：</label>
+                <input type="number" id="filter_speckle" min="0" max="100" step="1" value="2">
+            </div>
+            <div class="form-group">
+                <label for="path_precision">路径精度：</label>
+                <input type="number" id="path_precision" min="0" max="8" step="1" value="5">
+            </div>
+            <div class="form-group">
+                <label for="color_precision">颜色精度：</label>
+                <input type="number" id="color_precision" min="1" max="8" step="1" value="8">
+            </div>
+            <div class="form-group">
+                <label for="gradient_step">渐变步长：</label>
+                <input type="number" id="gradient_step" min="1" max="100" step="1" value="10">
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="section">
+            <h2>3. 执行操作</h2>
+            <div class="button-group">
+                <button type="button" id="generateBatch">批量生成</button>
+                <button type="button" class="secondary" id="exportParams">导出参数文本</button>
+                <button type="button" class="secondary" id="loadParams">导入参数</button>
+                <button type="button" class="danger" id="clearLog">清空日志</button>
+            </div>
+            <div id="output"></div>
+        </div>
+
+        <!-- 参数文本 -->
+        <div class="section">
+            <h2>4. 参数文本</h2>
+            <textarea id="paramsText" placeholder="参数文本将显示在这里..."></textarea>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let selectedFiles = [];
+
+        // 日志输出
+        function log(message) {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            output.innerHTML += `[${timestamp}] ${message}<br>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        // 清空日志
+        document.getElementById('clearLog').addEventListener('click', function() {
+            document.getElementById('output').innerHTML = '';
+        });
+
+        // 模拟文件夹选择
+        document.getElementById('browseInput').addEventListener('click', function() {
+            log('请在命令行中手动输入输入文件夹路径');
+            log('示例：C:\\Users\\username\\Desktop\\images');
+        });
+
+        document.getElementById('browseOutput').addEventListener('click', function() {
+            log('请在命令行中手动输入输出文件夹路径');
+            log('示例：C:\\Users\\username\\Desktop\\output');
+        });
+
+        // 检测输入文件夹中的图像文件
+        function detectImageFiles() {
+            const inputFolder = document.getElementById('inputFolder').value;
+            if (!inputFolder) {
+                log('请先选择输入文件夹');
+                return;
+            }
+
+            log(`正在检测 ${inputFolder} 中的图像文件...`);
+
+            // 模拟检测到的图像文件
+            selectedFiles = [
+                'image1.png',
+                'image2.jpg',
+                'image3.png',
+                'image4.jpg'
+            ];
+
+            // 显示文件列表
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+            selectedFiles.forEach(file => {
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.textContent = file;
+                fileList.appendChild(div);
+            });
+
+            log(`共检测到 ${selectedFiles.length} 个图像文件`);
+        }
+
+        function collectParams() {
+            return {
+                colormode: document.getElementById('colormode').value,
+                mode: document.getElementById('mode').value,
+                hierarchical: document.getElementById('hierarchical').value,
+                format: document.getElementById('format').value,
+                segment_length: document.getElementById('segment_length').value,
+                splice_threshold: document.getElementById('splice_threshold').value,
+                corner_threshold: document.getElementById('corner_threshold').value,
+                filter_speckle: document.getElementById('filter_speckle').value,
+                path_precision: document.getElementById('path_precision').value,
+                color_precision: document.getElementById('color_precision').value,
+                gradient_step: document.getElementById('gradient_step').value
+            };
+        }
+
+        function generateBatchCommand(inputFolder, outputFolder, params) {
+            const outputExtension = params.format;
+
+            let command = 'for %%f in ("' + inputFolder + '\*.png", "' + inputFolder + '\*.jpg") do (\n';
+            command += '    vtracer --input "%%f" --output "' + outputFolder + '\%%~nf.' + outputExtension + '" \\\n';
+            command += '    --colormode ' + params.colormode + ' \\\n';
+            command += '    --mode ' + params.mode + ' \\\n';
+            command += '    --hierarchical ' + params.hierarchical + ' \\\n';
+            command += '    --format ' + params.format + ' \\\n';
+            command += '    --segment_length ' + params.segment_length + ' \\\n';
+            command += '    --splice_threshold ' + params.splice_threshold + ' \\\n';
+            command += '    --corner_threshold ' + params.corner_threshold + ' \\\n';
+            command += '    --filter_speckle ' + params.filter_speckle + ' \\\n';
+            command += '    --path_precision ' + params.path_precision + ' \\\n';
+            command += '    --color_precision ' + params.color_precision + ' \\\n';
+            command += '    --gradient_step ' + params.gradient_step + '\n';
+            command += ')';
+
+            return command;
+        }
+
+        // 导出参数为文本
+        document.getElementById('exportParams').addEventListener('click', function() {
+            const params = collectParams();
+
+            let paramsText = '# VTracer 转换参数\n';
+            paramsText += '\n# 基本设置\n';
+            paramsText += `--colormode ${params.colormode}\n`;
+            paramsText += `--mode ${params.mode}\n`;
+            paramsText += `--hierarchical ${params.hierarchical}\n`;
+            paramsText += `--format ${params.format}\n`;
+
+            paramsText += '\n# 曲线设置\n';
+            paramsText += `--segment_length ${params.segment_length}\n`;
+            paramsText += `--splice_threshold ${params.splice_threshold}\n`;
+            paramsText += `--corner_threshold ${params.corner_threshold}\n`;
+
+            paramsText += '\n# 精度设置\n';
+            paramsText += `--filter_speckle ${params.filter_speckle}\n`;
+            paramsText += `--path_precision ${params.path_precision}\n`;
+            paramsText += `--color_precision ${params.color_precision}\n`;
+            paramsText += `--gradient_step ${params.gradient_step}\n`;
+
+            // 生成批量处理命令
+            const inputFolder = document.getElementById('inputFolder').value;
+            const outputFolder = document.getElementById('outputFolder').value;
+
+            if (inputFolder && outputFolder) {
+                paramsText += '\n# 批量处理命令\n';
+                paramsText += generateBatchCommand(inputFolder, outputFolder, params);
+            }
+
+            document.getElementById('paramsText').value = paramsText;
+            log(`参数文本已导出，当前导出格式为 ${params.format.toUpperCase()}`);
+        });
+
+        // 导入参数
+        document.getElementById('loadParams').addEventListener('click', function() {
+            const paramsText = document.getElementById('paramsText').value;
+            if (!paramsText) {
+                log('请先输入参数文本');
+                return;
+            }
+
+            // 解析参数
+            const lines = paramsText.split('\n');
+            const params = {};
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (line.startsWith('--')) {
+                    const parts = line.split(' ');
+                    const key = parts[0].substring(2);
+                    const value = parts[1] || '';
+                    params[key] = value;
+                }
+            });
+
+            // 设置参数
+            for (const key in params) {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.value = params[key];
+                }
+            }
+
+            log('参数已导入');
+        });
+
+        // 批量生成
+        document.getElementById('generateBatch').addEventListener('click', async function() {
+            const inputFolder = document.getElementById('inputFolder').value;
+            const outputFolder = document.getElementById('outputFolder').value;
+            const format = document.getElementById('format').value;
+
+            if (!inputFolder || !outputFolder) {
+                log('请先选择输入和输出文件夹');
+                return;
+            }
+
+            log(`开始批量转换，目标导出格式：${format.toUpperCase()}...`);
+            log('注意：这是模拟操作，实际使用时请复制下面的命令到命令行执行');
+
+            // 生成并显示批量命令
+            const paramsText = document.getElementById('paramsText');
+            if (!paramsText.value) {
+                document.getElementById('exportParams').click();
+            }
+
+            log('\n=== 批量转换命令 ===');
+            log(paramsText.value);
+            log('===================');
+            log(`\n请复制以上命令到命令行窗口执行，以生成 ${format.toUpperCase()} 导出文件`);
+        });
+
+        // 初始化
+        window.addEventListener('load', function() {
+            log('VTracer 批量转换工具已加载');
+            log('请按照步骤操作：1.选择文件夹 2.调整参数 3.执行转换');
+        });
+    </script>
+</body>
+</html>
