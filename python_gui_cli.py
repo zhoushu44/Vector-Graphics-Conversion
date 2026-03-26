@@ -165,7 +165,15 @@ class VTracerGUI:
         # 添加黑色和红色快速选择按钮
         ttk.Button(stroke_color_frame, text="黑色", command=lambda: self.stroke_color_var.set("black"), width=4).pack(side=tk.LEFT, padx=2)
         ttk.Button(stroke_color_frame, text="红色", command=lambda: self.stroke_color_var.set("red"), width=4).pack(side=tk.LEFT, padx=2)
-        
+
+        # Expand stroke
+        self.expand_stroke_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(
+            params_frame,
+            text="将描边转为轮廓填充（移除原描边属性）",
+            variable=self.expand_stroke_var,
+        ).grid(row=14, column=0, columnspan=3, sticky=tk.W, padx=2, pady=2)
+
         # Convert button
         button_frame = ttk.Frame(self.root, padding="5")
         button_frame.pack(fill=tk.X)
@@ -318,7 +326,10 @@ class VTracerGUI:
                 # 如果描边宽度大于0，则添加描边宽度参数
                 if self.stroke_width_var.get() > 0:
                     base_cmd.extend(["--stroke_width", str(self.stroke_width_var.get())])
-                
+
+                    if self.expand_stroke_var.get():
+                        base_cmd.append("--expand_stroke")
+
                 # 如果指定了描边颜色，则添加描边颜色参数
                 if self.stroke_color_var.get():
                     base_cmd.extend(["--stroke_color", self.stroke_color_var.get()])

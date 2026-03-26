@@ -53,8 +53,11 @@ vtracer --input 输入图像路径 --output 输出SVG路径
 # 基本转换
 vtracer --input "C:\Users\zs\Desktop\横图png\横图png\1.png" --output "output.svg"
 
-# 添加2pt黑色轮廓
+# 添加2pt黑色普通描边
 vtracer --input "image.jpg" --output "vector.svg" --stroke_width 2 --stroke_color black
+
+# 添加2pt黑色描边并转为轮廓填充
+vtracer --input "image.jpg" --output "vector-outlined.svg" --stroke_width 2 --stroke_color black --expand_stroke
 
 # 使用高细节参数
 vtracer --input "photo.png" --output "vector.svg" --mode spline --segment_length 3.5 --splice_threshold 10 --filter_speckle 2
@@ -69,8 +72,9 @@ vtracer --input "photo.png" --output "vector.svg" --mode spline --segment_length
 | `--colormode` | 颜色模式：`color`(彩色) 或 `bw`(黑白) | `color` |
 | `--mode` | 曲线拟合：`pixel`、`polygon`、`spline` | `spline` |
 | `--segment_length` | 段长度（3.5-10） | 4.0 |
-| `--stroke_width` | 轮廓线宽（新增） | 无 |
-| `--stroke_color` | 轮廓颜色（新增） | `black` |
+| `--stroke_width` | 描边宽度；默认输出普通 live stroke | 无 |
+| `--stroke_color` | 描边颜色 | `black` |
+| `--expand_stroke` | 将描边转为轮廓填充，并移除原 `stroke` 属性 | 关闭 |
 | `--filter_speckle` | 噪点过滤 | 4 |
 | `--path_precision` | 路径精度 | 2 |
 
@@ -94,7 +98,7 @@ python vtracer_batch_gui.py
 
 3. **调整参数**：
    - 在参数设置区域调整转换选项
-   - 特别注意新增的"轮廓线宽"和"轮廓颜色"设置
+   - 特别注意新增的“描边宽度”“描边颜色”和“描边转轮廓”设置
 
 4. **执行转换**：
    - 点击"批量转换"按钮
@@ -103,21 +107,30 @@ python vtracer_batch_gui.py
 5. **查看结果**：
    - 在输出文件夹中找到生成的SVG文件
 
-## 新功能：轮廓线宽
+## 新功能：描边与描边转轮廓
 
 ### 使用方法
 
 1. **命令行**：
    ```bash
+   # 普通描边
    vtracer --input image.png --output vector.svg --stroke_width 2 --stroke_color black
+
+   # 描边转轮廓
+   vtracer --input image.png --output vector-outline.svg --stroke_width 2 --stroke_color black --expand_stroke
    ```
 
 2. **GUI界面**：
-   - 在参数设置面板找到"轮廓线宽"和"轮廓颜色"
-   - 设置线宽为1、2、3等数值（0表示不添加轮廓）
-   - 选择轮廓颜色
+   - 在参数设置面板找到“描边宽度 / 描边颜色”
+   - 勾选“将描边转为轮廓填充（移除原描边属性）”可启用描边转轮廓
+   - 不勾选时保持普通描边
 
-### 支持的轮廓颜色
+### 两种模式的区别
+- `--stroke_width`：输出普通 SVG 描边，结果里仍包含 `stroke` 和 `stroke-width`
+- `--stroke_width --expand_stroke`：输出原始填充 path + 额外的描边轮廓填充 path，不再保留 live stroke 属性
+- `--expand_stroke` 不能单独使用，必须和 `--stroke_width` 一起使用
+
+### 支持的描边颜色
 - 颜色名称：`black`、`white`、`red`、`green`、`blue`
 - 十六进制值：`#000000`、`#ffffff`、`#ff0000`
 

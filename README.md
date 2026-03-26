@@ -87,7 +87,15 @@ cargo install vtracer
 
 ```sh
 ./vtracer --input input.jpg --output output.svg
+./vtracer --input input.png --output outlined.svg --stroke_width 2 --stroke_color black
+./vtracer --input input.png --output outlined-filled.svg --stroke_width 2 --stroke_color black --expand_stroke
 ```
+
+### Stroke modes
+
+- `--stroke_width` keeps the current live SVG stroke behavior.
+- `--stroke_width ... --expand_stroke` converts that stroke into an extra filled outline path and removes the live `stroke`/`stroke-width` attributes.
+- `--expand_stroke` requires `--stroke_width`.
 
 ### Rust Library
 

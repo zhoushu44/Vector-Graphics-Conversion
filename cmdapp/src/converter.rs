@@ -201,7 +201,13 @@ fn color_image_to_svg(mut img: ColorImage, config: ConverterConfig) -> Result<Sv
             config.max_iterations,
             config.splice_threshold,
         );
-        svg.add_path(paths, cluster.residue_color(), config.stroke_width, config.stroke_color.clone());
+        svg.add_path(
+            paths,
+            cluster.residue_color(),
+            config.stroke_width,
+            config.stroke_color.clone(),
+            config.expand_stroke,
+        );
     }
 
     Ok(svg)
@@ -225,7 +231,13 @@ fn binary_image_to_svg(img: ColorImage, config: ConverterConfig) -> Result<SvgFi
                 config.max_iterations,
                 config.splice_threshold,
             );
-            svg.add_path(paths, Color::color(&ColorName::Black), config.stroke_width, config.stroke_color.clone());
+            svg.add_path(
+                paths,
+                Color::color(&ColorName::Black),
+                config.stroke_width,
+                config.stroke_color.clone(),
+                config.expand_stroke,
+            );
         }
     }
 

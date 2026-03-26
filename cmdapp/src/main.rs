@@ -140,6 +140,12 @@ pub fn config_from_args() -> (PathBuf, PathBuf, Config, OutputFormat) {
     );
 
     let app = app.arg(
+        Arg::with_name("expand_stroke")
+            .long("expand_stroke")
+            .help("Convert the stroke into a filled outline and remove live stroke attributes"),
+    );
+
+    let app = app.arg(
         Arg::with_name("format")
             .long("format")
             .short("t")
@@ -306,6 +312,13 @@ pub fn config_from_args() -> (PathBuf, PathBuf, Config, OutputFormat) {
         if !value.is_empty() {
             config.stroke_color = Some(value.to_string());
         }
+    }
+
+    if matches.is_present("expand_stroke") {
+        if config.stroke_width.is_none() {
+            panic!("Parser Error: --expand_stroke requires --stroke_width.");
+        }
+        config.expand_stroke = true;
     }
 
     // Parse output format

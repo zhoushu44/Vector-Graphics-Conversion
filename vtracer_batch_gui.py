@@ -103,7 +103,8 @@ class VTracerBatchConverter:
             "color_precision": tk.IntVar(value=8),
             "gradient_step": tk.IntVar(value=10),
             "stroke_width": tk.DoubleVar(value=0),
-            "stroke_color": tk.StringVar(value="black")
+            "stroke_color": tk.StringVar(value="black"),
+            "expand_stroke": tk.BooleanVar(value=False)
         }
         
         # 参数标签和控件
@@ -155,7 +156,14 @@ class VTracerBatchConverter:
         ttk.Label(param_grid, text="轮廓颜色：").grid(row=row, column=2, sticky=tk.W, pady=5, padx=20)
         ttk.Combobox(param_grid, textvariable=self.params["stroke_color"], values=["black", "white", "red", "green", "blue", "#000000", "#ffffff"], width=13).grid(row=row, column=3, sticky=tk.W, pady=5)
         row += 1
-        
+
+        ttk.Checkbutton(
+            param_grid,
+            text="将描边转为轮廓填充（移除原描边属性）",
+            variable=self.params["expand_stroke"],
+        ).grid(row=row, column=0, columnspan=4, sticky=tk.W, pady=5)
+        row += 1
+
         # 3. 操作按钮部分
         action_frame = ttk.Frame(main_frame)
         action_frame.pack(fill=tk.X, pady=10)
@@ -343,6 +351,8 @@ class VTracerBatchConverter:
         if stroke_width > 0:
             cmd.append(f"--stroke_width {stroke_width}")
             cmd.append(f"--stroke_color {self.params['stroke_color'].get()}")
+            if self.params['expand_stroke'].get():
+                cmd.append("--expand_stroke")
 
         return " ".join(cmd)
     
@@ -382,7 +392,13 @@ class VTracerBatchConverter:
                 f.write(f"--path_precision {self.params['path_precision'].get()}\n")
                 f.write(f"--color_precision {self.params['color_precision'].get()}\n")
                 f.write(f"--gradient_step {self.params['gradient_step'].get()}\n")
-            
+
+                f.write("\n# 描边设置\n")
+                f.write(f"--stroke_width {self.params['stroke_width'].get()}\n")
+                f.write(f"--stroke_color {self.params['stroke_color'].get()}\n")
+                if self.params['expand_stroke'].get():
+                    f.write("--expand_stroke\n")
+
             self.log(f"参数已导出到：{file_path}")
             messagebox.showinfo("成功", "参数导出成功")
         except Exception as e:
@@ -404,18 +420,24 @@ class VTracerBatchConverter:
                 for line in f:
                     line = line.strip()
                     if line and not line.startswith('#'):
+                        if line.startswith('--expand_stroke'):
+                            self.params['expand_stroke'].set(True)
+                            continue
+
                         if line.startswith('--'):
                             parts = line.split(' ', 1)
                             if len(parts) == 2:
                                 param_name = parts[0][2:]
                                 param_value = parts[1]
-                                
+
                                 if param_name in self.params:
                                     param_var = self.params[param_name]
                                     if isinstance(param_var, tk.IntVar):
                                         param_var.set(int(param_value))
                                     elif isinstance(param_var, tk.DoubleVar):
                                         param_var.set(float(param_value))
+                                    elif isinstance(param_var, tk.BooleanVar):
+                                        param_var.set(param_value.lower() in ('1', 'true', 'yes', 'on'))
                                     else:
                                         param_var.set(param_value)
             

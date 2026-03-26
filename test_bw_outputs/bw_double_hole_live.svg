@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generator: visioncortex VTracer 0.6.12 -->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="180" height="180">
+<path d="M0 0 C46.53 0 93.06 0 141 0 C141 46.53 141 93.06 141 141 C94.47 141 47.94 141 0 141 C0 94.47 0 47.94 0 0 Z M35 35 C35 58.43 35 81.86 35 106 C58.43 106 81.86 106 106 106 C106 82.57 106 59.14 106 35 C82.57 35 59.14 35 35 35 Z " fill="#000000" transform="translate(20, 20)" stroke-width="8.0px" stroke="black" />
+</svg>

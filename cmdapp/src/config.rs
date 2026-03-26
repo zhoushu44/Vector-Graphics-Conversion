@@ -43,6 +43,7 @@ pub struct Config {
     pub path_precision: Option<u32>,
     pub stroke_width: Option<f64>,
     pub stroke_color: Option<String>,
+    pub expand_stroke: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -60,6 +61,7 @@ pub(crate) struct ConverterConfig {
     pub path_precision: Option<u32>,
     pub stroke_width: Option<f64>,
     pub stroke_color: Option<String>,
+    pub expand_stroke: bool,
 }
 
 impl Default for Config {
@@ -78,6 +80,7 @@ impl Default for Config {
             path_precision: Some(2),
             stroke_width: None,
             stroke_color: None,
+            expand_stroke: false,
         }
     }
 }
@@ -149,6 +152,7 @@ impl Config {
                 path_precision: Some(2),
                 stroke_width: None,
                 stroke_color: None,
+                expand_stroke: false,
             },
             Preset::Poster => Self {
                 color_mode: ColorMode::Color,
@@ -164,6 +168,7 @@ impl Config {
                 path_precision: Some(2),
                 stroke_width: None,
                 stroke_color: None,
+                expand_stroke: false,
             },
             Preset::Photo => Self {
                 color_mode: ColorMode::Color,
@@ -179,6 +184,7 @@ impl Config {
                 path_precision: Some(2),
                 stroke_width: None,
                 stroke_color: None,
+                expand_stroke: false,
             },
         }
     }
@@ -198,6 +204,7 @@ impl Config {
             path_precision: self.path_precision,
             stroke_width: self.stroke_width,
             stroke_color: self.stroke_color,
+            expand_stroke: self.expand_stroke,
         }
     }
 }
