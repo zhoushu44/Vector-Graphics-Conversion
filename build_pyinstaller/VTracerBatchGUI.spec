@@ -2,9 +2,9 @@
 
 
 a = Analysis(
-    ['C:/Users/zhou/Desktop/Vector-Graphics-Conversion/vtracer_batch_gui.py'],
+    ['C:/Users/zs/Desktop/Vector-Graphics-Conversion/vtracer_batch_gui.py'],
     pathex=[],
-    binaries=[('C:/Users/zhou/Desktop/Vector-Graphics-Conversion/vtracer.exe', '.')],
+    binaries=[('C:/Users/zs/Desktop/Vector-Graphics-Conversion/target/release/vtracer.exe', '.')],
     datas=[],
     hiddenimports=[],
     hookspath=[],

@@ -28,16 +28,21 @@ class VTracerGUI:
         self.create_widgets()
     
     def find_vtracer_executable(self):
-        # Check in target/debug
-        debug_path = os.path.join(os.path.dirname(__file__), 'target', 'debug', 'vtracer.exe')
-        if os.path.exists(debug_path):
-            return debug_path
-        
         # Check in target/release
         release_path = os.path.join(os.path.dirname(__file__), 'target', 'release', 'vtracer.exe')
         if os.path.exists(release_path):
             return release_path
-        
+
+        # Check in target/debug
+        debug_path = os.path.join(os.path.dirname(__file__), 'target', 'debug', 'vtracer.exe')
+        if os.path.exists(debug_path):
+            return debug_path
+
+        # Fallback to packaged executable in project root
+        bundled_path = os.path.join(os.path.dirname(__file__), 'vtracer.exe')
+        if os.path.exists(bundled_path):
+            return bundled_path
+
         return None
     
     def create_widgets(self):
@@ -174,6 +179,13 @@ class VTracerGUI:
             variable=self.expand_stroke_var,
         ).grid(row=14, column=0, columnspan=3, sticky=tk.W, padx=2, pady=2)
 
+        self.outer_stroke_only_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(
+            params_frame,
+            text="仅保留最外侧轮廓线",
+            variable=self.outer_stroke_only_var,
+        ).grid(row=15, column=0, columnspan=3, sticky=tk.W, padx=2, pady=2)
+
         # Convert button
         button_frame = ttk.Frame(self.root, padding="5")
         button_frame.pack(fill=tk.X)
@@ -232,6 +244,18 @@ class VTracerGUI:
             showerror("错误", "转换正在进行中，请稍候。")
             return
             
+        if self.expand_stroke_var.get() and self.stroke_width_var.get() <= 0:
+            showerror("错误", "启用“将描边转为轮廓填充”前，请先将描边宽度设置为大于 0。")
+            return
+
+        if self.outer_stroke_only_var.get() and self.stroke_width_var.get() <= 0:
+            showerror("错误", "启用“仅保留最外侧轮廓线”前，请先将描边宽度设置为大于 0。")
+            return
+
+        if self.expand_stroke_var.get() and self.outer_stroke_only_var.get():
+            showerror("错误", "“将描边转为轮廓填充”和“仅保留最外侧轮廓线”不能同时启用。")
+            return
+
         self.is_processing = True
         self.convert_button.config(text="转换中...", state=tk.DISABLED)
         
@@ -298,7 +322,7 @@ class VTracerGUI:
                 self.log_message("错误: 输入文件夹中没有找到可处理的图像文件 (支持的格式: PNG, JPG, JPEG, BMP, GIF, AI)")
                 return
             
-            self.log_message(f"找到 {len(image_files)} 个图像文件，开始转换...")
+            self.log_message(f"找到 {len(files_to_process)} 个图像文件，开始转换...")
             
             # 构建基本命令行参数
             base_cmd = [
@@ -329,6 +353,8 @@ class VTracerGUI:
 
                     if self.expand_stroke_var.get():
                         base_cmd.append("--expand_stroke")
+                    elif self.outer_stroke_only_var.get():
+                        base_cmd.append("--outer_stroke_only")
 
                 # 如果指定了描边颜色，则添加描边颜色参数
                 if self.stroke_color_var.get():
@@ -338,7 +364,7 @@ class VTracerGUI:
             success_count = 0
             error_count = 0
             
-            for file_name, input_file_path in image_files:
+            for file_name, input_file_path, _is_converted_ai in files_to_process:
                 self.log_message(f"正在处理: {file_name}")
                 
                 try:

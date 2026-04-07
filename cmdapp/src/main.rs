@@ -146,6 +146,12 @@ pub fn config_from_args() -> (PathBuf, PathBuf, Config, OutputFormat) {
     );
 
     let app = app.arg(
+        Arg::with_name("outer_stroke_only")
+            .long("outer_stroke_only")
+            .help("Keep the original fill path and stroke only the outer expanded contour"),
+    );
+
+    let app = app.arg(
         Arg::with_name("format")
             .long("format")
             .short("t")
@@ -318,7 +324,17 @@ pub fn config_from_args() -> (PathBuf, PathBuf, Config, OutputFormat) {
         if config.stroke_width.is_none() {
             panic!("Parser Error: --expand_stroke requires --stroke_width.");
         }
+        if matches.is_present("outer_stroke_only") {
+            panic!("Parser Error: --expand_stroke and --outer_stroke_only cannot be used together.");
+        }
         config.expand_stroke = true;
+    }
+
+    if matches.is_present("outer_stroke_only") {
+        if config.stroke_width.is_none() {
+            panic!("Parser Error: --outer_stroke_only requires --stroke_width.");
+        }
+        config.outer_stroke_only = true;
     }
 
     // Parse output format

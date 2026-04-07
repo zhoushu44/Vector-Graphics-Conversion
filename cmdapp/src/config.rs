@@ -44,6 +44,7 @@ pub struct Config {
     pub stroke_width: Option<f64>,
     pub stroke_color: Option<String>,
     pub expand_stroke: bool,
+    pub outer_stroke_only: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -62,6 +63,7 @@ pub(crate) struct ConverterConfig {
     pub stroke_width: Option<f64>,
     pub stroke_color: Option<String>,
     pub expand_stroke: bool,
+    pub outer_stroke_only: bool,
 }
 
 impl Default for Config {
@@ -81,6 +83,7 @@ impl Default for Config {
             stroke_width: None,
             stroke_color: None,
             expand_stroke: false,
+            outer_stroke_only: false,
         }
     }
 }
@@ -153,6 +156,7 @@ impl Config {
                 stroke_width: None,
                 stroke_color: None,
                 expand_stroke: false,
+                outer_stroke_only: false,
             },
             Preset::Poster => Self {
                 color_mode: ColorMode::Color,
@@ -169,6 +173,7 @@ impl Config {
                 stroke_width: None,
                 stroke_color: None,
                 expand_stroke: false,
+                outer_stroke_only: false,
             },
             Preset::Photo => Self {
                 color_mode: ColorMode::Color,
@@ -185,6 +190,7 @@ impl Config {
                 stroke_width: None,
                 stroke_color: None,
                 expand_stroke: false,
+                outer_stroke_only: false,
             },
         }
     }
@@ -205,6 +211,7 @@ impl Config {
             stroke_width: self.stroke_width,
             stroke_color: self.stroke_color,
             expand_stroke: self.expand_stroke,
+            outer_stroke_only: self.outer_stroke_only,
         }
     }
 }

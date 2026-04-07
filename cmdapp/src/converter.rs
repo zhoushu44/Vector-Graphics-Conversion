@@ -207,6 +207,7 @@ fn color_image_to_svg(mut img: ColorImage, config: ConverterConfig) -> Result<Sv
             config.stroke_width,
             config.stroke_color.clone(),
             config.expand_stroke,
+            config.outer_stroke_only,
         );
     }
 
@@ -237,6 +238,7 @@ fn binary_image_to_svg(img: ColorImage, config: ConverterConfig) -> Result<SvgFi
                 config.stroke_width,
                 config.stroke_color.clone(),
                 config.expand_stroke,
+                config.outer_stroke_only,
             );
         }
     }

@@ -20,12 +20,21 @@ def get_resource_base_dir():
 
 
 def find_vtracer_executable():
-    candidate_paths = [
-        os.path.join(get_app_base_dir(), 'vtracer.exe'),
-        os.path.join(get_app_base_dir(), 'tools', 'vtracer.exe'),
-        os.path.join(get_resource_base_dir(), 'vtracer.exe'),
-        os.path.join(get_resource_base_dir(), 'tools', 'vtracer.exe'),
-    ]
+    if getattr(sys, 'frozen', False):
+        candidate_paths = [
+            os.path.join(get_app_base_dir(), 'vtracer.exe'),
+            os.path.join(get_app_base_dir(), 'tools', 'vtracer.exe'),
+            os.path.join(get_resource_base_dir(), 'vtracer.exe'),
+            os.path.join(get_resource_base_dir(), 'tools', 'vtracer.exe'),
+        ]
+    else:
+        project_dir = get_app_base_dir()
+        candidate_paths = [
+            os.path.join(project_dir, 'target', 'release', 'vtracer.exe'),
+            os.path.join(project_dir, 'target', 'debug', 'vtracer.exe'),
+            os.path.join(project_dir, 'vtracer.exe'),
+            os.path.join(project_dir, 'tools', 'vtracer.exe'),
+        ]
 
     for path in candidate_paths:
         if os.path.isfile(path):
@@ -104,7 +113,8 @@ class VTracerBatchConverter:
             "gradient_step": tk.IntVar(value=10),
             "stroke_width": tk.DoubleVar(value=0),
             "stroke_color": tk.StringVar(value="black"),
-            "expand_stroke": tk.BooleanVar(value=False)
+            "expand_stroke": tk.BooleanVar(value=False),
+            "outer_stroke_only": tk.BooleanVar(value=False)
         }
         
         # 参数标签和控件
@@ -161,6 +171,13 @@ class VTracerBatchConverter:
             param_grid,
             text="将描边转为轮廓填充（移除原描边属性）",
             variable=self.params["expand_stroke"],
+        ).grid(row=row, column=0, columnspan=4, sticky=tk.W, pady=5)
+        row += 1
+
+        ttk.Checkbutton(
+            param_grid,
+            text="仅保留最外侧轮廓线",
+            variable=self.params["outer_stroke_only"],
         ).grid(row=row, column=0, columnspan=4, sticky=tk.W, pady=5)
         row += 1
 
@@ -280,6 +297,22 @@ class VTracerBatchConverter:
             self.enable_buttons()
             return
 
+        stroke_width = self.params['stroke_width'].get()
+        if self.params['expand_stroke'].get() and stroke_width <= 0:
+            messagebox.showwarning("警告", "启用“将描边转为轮廓填充”前，请先将轮廓线宽设置为大于 0。")
+            self.enable_buttons()
+            return
+
+        if self.params['outer_stroke_only'].get() and stroke_width <= 0:
+            messagebox.showwarning("警告", "启用“仅保留最外侧轮廓线”前，请先将轮廓线宽设置为大于 0。")
+            self.enable_buttons()
+            return
+
+        if self.params['expand_stroke'].get() and self.params['outer_stroke_only'].get():
+            messagebox.showwarning("警告", "“将描边转为轮廓填充”和“仅保留最外侧轮廓线”不能同时启用。")
+            self.enable_buttons()
+            return
+
         threading.Thread(target=self.batch_convert).start()
     
     def batch_convert(self):
@@ -353,6 +386,8 @@ class VTracerBatchConverter:
             cmd.append(f"--stroke_color {self.params['stroke_color'].get()}")
             if self.params['expand_stroke'].get():
                 cmd.append("--expand_stroke")
+            elif self.params['outer_stroke_only'].get():
+                cmd.append("--outer_stroke_only")
 
         return " ".join(cmd)
     
@@ -398,6 +433,8 @@ class VTracerBatchConverter:
                 f.write(f"--stroke_color {self.params['stroke_color'].get()}\n")
                 if self.params['expand_stroke'].get():
                     f.write("--expand_stroke\n")
+                elif self.params['outer_stroke_only'].get():
+                    f.write("--outer_stroke_only\n")
 
             self.log(f"参数已导出到：{file_path}")
             messagebox.showinfo("成功", "参数导出成功")
@@ -422,6 +459,12 @@ class VTracerBatchConverter:
                     if line and not line.startswith('#'):
                         if line.startswith('--expand_stroke'):
                             self.params['expand_stroke'].set(True)
+                            self.params['outer_stroke_only'].set(False)
+                            continue
+
+                        if line.startswith('--outer_stroke_only'):
+                            self.params['outer_stroke_only'].set(True)
+                            self.params['expand_stroke'].set(False)
                             continue
 
                         if line.startswith('--'):
